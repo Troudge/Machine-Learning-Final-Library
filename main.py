@@ -43,13 +43,21 @@ dataset3 = [['S', 'H', 'H', 'W', 0],
             ['O', 'M', 'H', 'S', 1],
             ['O', 'H', 'N', 'W', 1],
             ['R', 'M', 'H', 'S', 0],
-            ['', 'M', 'N', 'W', 1]]
+            ['?', 'M', 'N', 'W', 1]]
+
+dataset_car = []
+with open('Data/car/train.csv', 'r') as file:
+    for line in file:
+        terms = line.strip().split(',')
+        dataset_car.append(terms)
 
 
-def id3(dataset, attributes, label, gain_method, missing_string):
+def id3(dataset, attributes, label, gain_method, missing_string='?', max_depth=6):
     # graph = nx.Graph()
+    depth = 0
 
     def run_id3(data, attribute):
+        nonlocal depth
         temp_label = data[0][label]
         if all(row[label] == temp_label for row in data):
             if not attribute:
@@ -65,7 +73,7 @@ def id3(dataset, attributes, label, gain_method, missing_string):
             largest_gain = 0
             best = 0
             for atr in attribute:
-                gain = gain_method(dataset, atr, label)
+                gain = gain_method(dataset, atr, label, missing_string)
                 if gain > largest_gain:
                     largest_gain = gain
                     best = atr
@@ -83,10 +91,19 @@ def id3(dataset, attributes, label, gain_method, missing_string):
                     child.add_child(tree.Node(get_most_common_label(sv, label)))
                 else:
                     # graph.add_edge(run_id3(sv, attribute.difference((best,))), best)
-                    child.add_child(run_id3(sv, attribute.difference((best,))))
+                    if depth < max_depth:
+                        depth += 1
+                        child.add_child(run_id3(sv, attribute.difference((best,))))
+                    else:
+                        child.add_child(get_best(sv, attribute.difference((best,)), label))
             return root
 
     return run_id3(dataset, attributes)
+
+
+def get_best(input_set, attributes, label):
+    for attribute in attributes:
+        return tree.Node(get_most_common_attribute_value_with_label(input_set, attribute, label, 1))
 
 
 def get_most_common_label(dataset, label):
@@ -111,10 +128,12 @@ def get_most_common_attribute_value_with_label(dataset, attribute_col, label_col
     return counter.most_common(1)[0][0]
 
 
-def get_information_gain(input_set, attribute_col, label):
+def get_information_gain(input_set, attribute_col, label, missing_string):
     attribute = get_attribute_values(input_set, attribute_col)
     entropy_sum = 0
     for value in attribute:
+        if value == missing_string:
+            value = get_most_common_attribute_value(input_set, attribute_col)
         subset = [row[label] for row in input_set if row[attribute_col] == value]
         # print('subset: ', subset)
         entropy_sum += (len(subset) / len(input_set)) * get_entropy(subset)
@@ -122,7 +141,22 @@ def get_information_gain(input_set, attribute_col, label):
     return get_entropy([row[label] for row in input_set]) - entropy_sum
 
 
-def get_me_gain(input_set, attribute_col, label):
+def get_fractional_gain(input_set, attribute_col, label, missing_string):
+    attribute = get_attribute_values(input_set, attribute_col)
+    entropy_sum = 0
+    for value in attribute:
+        if value == missing_string:
+            # value = get_most_common_attribute_value(input_set, attribute_col)
+            entropy_sum += get_fractional_entropy(input_set, value, attribute_col, label)
+        else:
+            subset = [row[label] for row in input_set if row[attribute_col] == value]
+            # print('subset: ', subset)
+            entropy_sum += (len(subset) / len(input_set)) * get_entropy(subset)
+
+    return get_entropy([row[label] for row in input_set]) - entropy_sum
+
+
+def get_me_gain(input_set, attribute_col, label, missing_string):
     attribute = get_attribute_values(input_set, attribute_col)
     me_sum = 0
     for value in attribute:
@@ -133,7 +167,7 @@ def get_me_gain(input_set, attribute_col, label):
     return calculate_me([row[label] for row in input_set]) - me_sum
 
 
-def get_gini_gain(input_set, attribute_col, label):
+def get_gini_gain(input_set, attribute_col, label, missing_string):
     attribute = get_attribute_values(input_set, attribute_col)
     gini_sum = 0
     for value in attribute:
@@ -158,6 +192,18 @@ def get_entropy(input_set):
     return -positive_entropy * math.log2(positive_entropy) - negative_entropy * math.log2(negative_entropy)
 
 
+def get_fractional_entropy(input_set, value, attribute_col, label):
+    subset = [row for row in input_set if row[attribute_col] == value]
+    c = Counter(row[label] for row in subset)
+    negative_count = c[0]
+    positive_count = c[1]
+    count_sum = positive_count + negative_count
+    total = count_sum / len(input_set)
+    positive_entropy = positive_count / (count_sum + total)
+    negative_entropy = (negative_count + total) / (count_sum + total)
+    return -positive_entropy * math.log2(positive_entropy) - negative_entropy * math.log2(negative_entropy)
+
+
 def calculate_me(input_set):
     counter = Counter(input_set)
     return len(input_set) - counter[1] / len(input_set)
@@ -171,15 +217,21 @@ def calculate_gini(input_set):
     return 1 - value_sum
 
 
-print('dataset 1 entropy: ', get_entropy([row[-1] for row in dataset1]))
-print('dataset 2 entropy: ', get_entropy([row[-1] for row in dataset2]))
-print('dataset 2 Outlook = Sunny: ', get_entropy([row[-1] for row in dataset2 if row[0] == 'S']))
-print('information gain of Outlook', get_information_gain(dataset2, 0, 4))
-print('information gain of Humidity', get_information_gain(dataset2, 2, 4))
+# print('dataset 1 entropy: ', get_entropy([row[-1] for row in dataset1]))
+# print('dataset 2 entropy: ', get_entropy([row[-1] for row in dataset2]))
+# print('dataset 2 Outlook = Sunny: ', get_entropy([row[-1] for row in dataset2 if row[0] == 'S']))
+# print('information gain of Outlook', get_information_gain(dataset2, 0, 4, ''))
+# print('information gain of Humidity', get_information_gain(dataset2, 2, 4, ''))
+print('information gain using fractions on set 3: ', get_fractional_gain(dataset3, 0, 4, '?'))
+print('information gain using fractions on set 3: ', get_fractional_gain(dataset3, 1, 4, '?'))
+print('information gain using fractions on set 3: ', get_fractional_gain(dataset3, 2, 4, '?'))
+print('information gain using fractions on set 3: ', get_fractional_gain(dataset3, 3, 4, '?'))
 
-print('most common label for Outlook', get_most_common_attribute_value(dataset2, 0))
-print('most common label for Outlook', get_most_common_attribute_value_with_label(dataset2, 0, 4, 1))
+# print('most common label for Outlook', get_most_common_attribute_value(dataset2, 0))
+# print('most common label for Outlook', get_most_common_attribute_value_with_label(dataset2, 0, 4, 1))
 
-print(id3(dataset2, {0, 1, 2, 3}, 4, get_information_gain))
-nx.draw(id3(dataset2, {0, 1, 2, 3}, 4, get_information_gain).to_graph(), with_labels=True, arrows=True)
+# print(id3(dataset2, {0, 1, 2, 3}, 4, get_information_gain))
+print('result of id3 with missing value: ', id3(dataset3, {0, 1, 2, 3}, 4, get_fractional_gain))
+nx.draw(id3(dataset2, {0, 1, 2, 3}, 4, get_fractional_gain).to_graph(), with_labels=True, arrows=True)
+# nx.draw(id3(dataset2, {0, 1, 2, 3}, 4, get_information_gain).to_graph(), with_labels=True, arrows=True)
 plt.show()

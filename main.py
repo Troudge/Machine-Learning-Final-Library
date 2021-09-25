@@ -51,8 +51,25 @@ with open('Data/car/train.csv', 'r') as file:
         terms = line.strip().split(',')
         dataset_car.append(terms)
 
+dataset_car_test = []
+with open('Data/car/test.csv', 'r') as file:
+    for line in file:
+        terms = line.strip().split(',')
+        dataset_car_test.append(terms)
 
-def id3(dataset, attributes, label_col, gain_method, missing_string='?', max_depth=10):
+dataset_bank = []
+with open('Data/bank/train.csv', 'r') as file:
+    for line in file:
+        terms = line.strip().split(',')
+        dataset_bank.append(terms)
+
+dataset_bank_test = []
+with open('Data/bank/test.csv', 'r') as file:
+    for line in file:
+        terms = line.strip().split(',')
+        dataset_bank_test.append(terms)
+
+def id3(dataset, attributes, label_col, gain_method, missing_string='?', max_depth=30):
     # graph = nx.Graph()
     depth = 0
 
@@ -73,7 +90,7 @@ def id3(dataset, attributes, label_col, gain_method, missing_string='?', max_dep
             largest_gain = None
             best = ()
             for atr in attribute:
-                gain = gain_method(dataset, atr[0], label_col, missing_string)
+                gain = gain_method(data, atr[0], label_col, missing_string)
                 if not largest_gain or gain > largest_gain:
                     largest_gain = gain
                     best = (atr[0], atr[1])
@@ -228,7 +245,28 @@ def calculate_gini(input_set):
     return 1 - value_sum
 
 
-print(dataset_car[:5])
+def run_tree_on_dataset(input_tree, test_dataset, label_col, atr_names):
+    result = []
+    for row in test_dataset:
+        result.append((row[label_col], input_tree.traverse_with_inputs(input_tree, row[:label_col], atr_names)))
+    accurate_count = 0
+    for tup in result:
+        if tup[0] == tup[1]:
+            accurate_count += 1
+    print('number of correct guesses: ', accurate_count)
+    print('number of incorrect guesses: ', len(result) - accurate_count)
+    print('accuracy of tree: ', accurate_count / len(result))
+    print(f'\n')
+    return result
+
+
+# Demonstration of how using the created tree works
+# tree2 = id3(dataset2, {(0, 'Outlook'), (1, 'Temp'), (2, 'Humidity'), (3, 'Wind')}, 4, get_information_gain)
+# print('Expected: 1 Actual: ', tree2.traverse_with_inputs(tree2, ['R', 'M', 'N', 'W'],
+#                                                        {'Outlook', 'Temp', 'Humidity', 'Wind'}))
+# nx.draw(tree2.to_graph(), with_labels=True, arrows=True)
+# plt.show()
+
 # Question 1 answers:
 print('output of algorithm on dataset 1: \n',
       id3(dataset1, {(0, 'x1'), (1, 'x2'), (2, 'x3'), (3, 'x4')}, 4, get_information_gain))
@@ -271,10 +309,218 @@ nx.draw(id3(dataset3, {(0, 'Outlook'), (1, 'Temp'), (2, 'Humidity'), (3, 'Wind')
 plt.show()
 
 # Part 2 Car dataset Answers:
+# tree creation
+car_tree_basic_no_limit = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                            (5, 'safety')}, 6, get_information_gain)
+car_tree_basic_depth_1 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_information_gain, max_depth=1)
+car_tree_basic_depth_2 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_information_gain, max_depth=2)
+car_tree_basic_depth_3 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_information_gain, max_depth=3)
+car_tree_basic_depth_4 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_information_gain, max_depth=4)
+car_tree_basic_depth_5 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_information_gain, max_depth=5)
+car_tree_basic_depth_6 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_information_gain, max_depth=6)
 
-print('result of id3 on the car dataset: \n',
-      id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'), (5, 'safety')}, 6,
-          get_information_gain))
-nx.draw(id3(dataset2, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'), (5, 'safety')}, 6,
-            get_information_gain).to_graph(), with_labels=True, arrows=True)
+print('result of id3 on the car dataset: \n', car_tree_basic_no_limit)
+nx.draw(car_tree_basic_no_limit.to_graph(), with_labels=True, arrows=True)
 plt.show()
+
+print('results of standard tree no depth limit on training data:')
+run_tree_on_dataset(car_tree_basic_no_limit, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of standard tree no depth limit on test data')
+run_tree_on_dataset(car_tree_basic_no_limit, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+
+print('results of standard tree depth limit 1 on training data:')
+run_tree_on_dataset(car_tree_basic_depth_1, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of standard tree depth limit 1 on test data')
+run_tree_on_dataset(car_tree_basic_depth_1, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+print('results of standard tree depth limit 2 on training data:')
+run_tree_on_dataset(car_tree_basic_depth_2, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of standard tree depth limit 2 on test data')
+run_tree_on_dataset(car_tree_basic_depth_2, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+print('results of standard tree depth limit 3 on training data:')
+run_tree_on_dataset(car_tree_basic_depth_3, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of standard tree depth limit 3 on test data')
+run_tree_on_dataset(car_tree_basic_depth_3, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+
+print('results of standard tree depth limit 4 on training data:')
+run_tree_on_dataset(car_tree_basic_depth_4, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of standard tree depth limit 4 on test data')
+run_tree_on_dataset(car_tree_basic_depth_4, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+print('results of standard tree depth limit 5 on training data:')
+run_tree_on_dataset(car_tree_basic_depth_5, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of standard tree depth limit 5 on test data')
+run_tree_on_dataset(car_tree_basic_depth_5, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+
+print('results of standard tree depth limit 6 on training data:')
+run_tree_on_dataset(car_tree_basic_depth_6, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of standard tree depth limit 6 on test data')
+run_tree_on_dataset(car_tree_basic_depth_6, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+# same as above but with Me gain
+car_tree_me_no_limit = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                            (5, 'safety')}, 6, get_me_gain)
+car_tree_me_depth_1 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_me_gain, max_depth=1)
+car_tree_me_depth_2 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_me_gain, max_depth=2)
+car_tree_me_depth_3 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_me_gain, max_depth=3)
+car_tree_me_depth_4 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_me_gain, max_depth=4)
+car_tree_me_depth_5 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_me_gain, max_depth=5)
+car_tree_me_depth_6 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_me_gain, max_depth=6)
+
+print('result of id3 on the car dataset: \n', car_tree_me_no_limit)
+nx.draw(car_tree_me_no_limit.to_graph(), with_labels=True, arrows=True)
+plt.show()
+
+print('results of me tree no depth limit on training data:')
+run_tree_on_dataset(car_tree_me_no_limit, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of me tree no depth limit on test data')
+run_tree_on_dataset(car_tree_me_no_limit, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+
+print('results of me tree depth limit 1 on training data:')
+run_tree_on_dataset(car_tree_me_depth_1, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of me tree depth limit 1 on test data')
+run_tree_on_dataset(car_tree_me_depth_1, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+print('results of me tree depth limit 2 on training data:')
+run_tree_on_dataset(car_tree_me_depth_2, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of me tree depth limit 2 on test data')
+run_tree_on_dataset(car_tree_me_depth_2, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+print('results of me tree depth limit 3 on training data:')
+run_tree_on_dataset(car_tree_me_depth_3, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of me tree depth limit 3 on test data')
+run_tree_on_dataset(car_tree_me_depth_3, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+
+print('results of me tree depth limit 4 on training data:')
+run_tree_on_dataset(car_tree_me_depth_4, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of me tree depth limit 4 on test data')
+run_tree_on_dataset(car_tree_me_depth_4, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+print('results of me tree depth limit 5 on training data:')
+run_tree_on_dataset(car_tree_me_depth_5, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of me tree depth limit 5 on test data')
+run_tree_on_dataset(car_tree_me_depth_5, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+
+print('results of me tree depth limit 6 on training data:')
+run_tree_on_dataset(car_tree_me_depth_6, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of me tree depth limit 6 on test data')
+run_tree_on_dataset(car_tree_me_depth_6, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+# same as above but with GINI instead
+car_tree_gini_no_limit = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                            (5, 'safety')}, 6, get_gini_gain)
+car_tree_gini_depth_1 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_gini_gain, max_depth=1)
+car_tree_gini_depth_2 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_gini_gain, max_depth=2)
+car_tree_gini_depth_3 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_gini_gain, max_depth=3)
+car_tree_gini_depth_4 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_gini_gain, max_depth=4)
+car_tree_gini_depth_5 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_gini_gain, max_depth=5)
+car_tree_gini_depth_6 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
+                                           (5, 'safety')}, 6, get_gini_gain, max_depth=6)
+
+print('result of id3 on the car dataset: \n', car_tree_gini_no_limit)
+nx.draw(car_tree_gini_no_limit.to_graph(), with_labels=True, arrows=True)
+plt.show()
+
+print('results of gini tree no depth limit on training data:')
+run_tree_on_dataset(car_tree_gini_no_limit, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of gini tree no depth limit on test data')
+run_tree_on_dataset(car_tree_gini_no_limit, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+
+print('results of gini tree depth limit 1 on training data:')
+run_tree_on_dataset(car_tree_gini_depth_1, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of gini tree depth limit 1 on test data')
+run_tree_on_dataset(car_tree_gini_depth_1, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+print('results of gini tree depth limit 2 on training data:')
+run_tree_on_dataset(car_tree_gini_depth_2, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of gini tree depth limit 2 on test data')
+run_tree_on_dataset(car_tree_gini_depth_2, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+print('results of gini tree depth limit 3 on training data:')
+run_tree_on_dataset(car_tree_gini_depth_3, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of gini tree depth limit 3 on test data')
+run_tree_on_dataset(car_tree_gini_depth_3, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+
+print('results of gini tree depth limit 4 on training data:')
+run_tree_on_dataset(car_tree_gini_depth_4, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of gini tree depth limit 4 on test data')
+run_tree_on_dataset(car_tree_gini_depth_4, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+print('results of gini tree depth limit 5 on training data:')
+run_tree_on_dataset(car_tree_gini_depth_5, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of gini tree depth limit 5 on test data')
+run_tree_on_dataset(car_tree_gini_depth_5, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+
+
+print('results of gini tree depth limit 6 on training data:')
+run_tree_on_dataset(car_tree_gini_depth_6, dataset_car, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+print('results of gini tree depth limit 6 on test data')
+run_tree_on_dataset(car_tree_gini_depth_6, dataset_car_test, 6,
+                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])

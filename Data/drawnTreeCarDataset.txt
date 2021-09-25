@@ -1,124 +1,174 @@
-result of id3 on the car dataset:
+ Result of basic id3 on cars train dataset
  safety
 	high
 		persons
-			2
-				unacc
 			more
 				buying
+					vhigh
+						maint
+							vhigh
+								unacc
+							high
+								unacc
+							med
+								acc
+							low
+								doors
+									3
+										acc
+									4
+										acc
+									2
+										lug_boot
+											small
+												unacc
+											big
+												acc
+									5more
+										acc
 					high
 						maint
+							vhigh
+								unacc
 							high
 								acc
 							med
 								acc
-							vhigh
-								unacc
 							low
 								acc
 					med
 						maint
+							vhigh
+								acc
 							high
 								acc
 							med
-								lug_boot
-									med
-										doors
-											2
-												acc
-											3
+								doors
+									3
+										vgood
+									4
+										vgood
+									2
+										lug_boot
+											big
 												vgood
+											med
+												acc
+							low
+								doors
+									3
+										good
+									2
+										lug_boot
+											small
+												unacc
+											med
+												good
+									5more
+										vgood
+					low
+						maint
+							vhigh
+								doors
+									3
+										acc
+									4
+										acc
+									2
+										lug_boot
+											small
+												unacc
+											big
+												acc
+									5more
+										acc
+							high
+								lug_boot
+									small
+										acc
 									big
 										vgood
-							vhigh
-								acc
-							low
-								good
-					vhigh
-						maint
-							high
-								unacc
 							med
-								acc
-							vhigh
-								unacc
+								lug_boot
+									small
+										good
+									big
+										vgood
+									med
+										vgood
 							low
-								acc
-					low
-						maint
-							high
-								acc
-							med
-								vgood
-							vhigh
-								acc
-							low
-								vgood
+								lug_boot
+									small
+										unacc
+									big
+										vgood
 			4
 				buying
+					vhigh
+						maint
+							vhigh
+								unacc
+							high
+								unacc
+							med
+								acc
+							low
+								acc
 					high
 						maint
+							vhigh
+								unacc
 							high
 								acc
 							med
 								acc
-							vhigh
-								unacc
 							low
 								acc
 					med
 						maint
+							vhigh
+								acc
 							high
 								acc
 							med
 								vgood
-							vhigh
-								acc
 							low
 								vgood
-					vhigh
-						maint
-							high
-								unacc
-							med
-								acc
-							vhigh
-								unacc
-							low
-								acc
 					low
 						maint
+							vhigh
+								acc
 							high
 								vgood
 							med
 								vgood
-							vhigh
-								acc
 							low
 								good
-	med
-		persons
 			2
 				unacc
+	med
+		persons
 			more
-				buying
+				maint
+					vhigh
+						unacc
 					high
 						acc
 					med
 						acc
-					vhigh
-						unacc
 					low
 						acc
 			4
 				buying
+					vhigh
+						unacc
 					high
 						unacc
 					med
 						acc
-					vhigh
-						unacc
 					low
 						acc
+			2
+				unacc
 	low
 		unacc

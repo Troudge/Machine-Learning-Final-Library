@@ -1,7 +1,6 @@
 # basic implementation of a tree structure in python
 import networkx as nx
 
-
 class Node:
     """a node which contains a name and a list of references to its children"""
 
@@ -14,6 +13,11 @@ class Node:
 
     def add_child(self, child):
         self.children.append(child)
+
+    def has_children(self):
+        if self.children:
+            return True
+        return False
 
     def __string(self, layer=0):
         return "{}{}\n{}".format('\t' * layer, self.name, "".join(
@@ -40,9 +44,17 @@ class Node:
         add_to_graph(self)
         return graph
 
+    def traverse_with_inputs(self, root, path, atr_names):
+        if not path:
+            if root.children:
+                return root.children[0].name
+            else:
+                return f'no output found. path ended at: {root.name}'
+        for p in path:
+            for child in root.children:
+                if not child.has_children():
+                    return child.name
+                if child.name in atr_names or child.name == p:
+                    # print('traversing into:', child.name)
+                    return self.traverse_with_inputs(child, path, atr_names)
 
-class Tree:
-    """A tree structure containing 1 or more nodes"""
-
-    def __init__(self, root):
-        self.root = root

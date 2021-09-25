@@ -1,8 +1,10 @@
+#!/usr/bin/env python
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import Counter
 import math
 import tree
+import statistics
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -69,6 +71,7 @@ with open('Data/bank/test.csv', 'r') as file:
         terms = line.strip().split(',')
         dataset_bank_test.append(terms)
 
+
 def id3(dataset, attributes, label_col, gain_method, missing_string='?', max_depth=30):
     # graph = nx.Graph()
     depth = 0
@@ -78,12 +81,9 @@ def id3(dataset, attributes, label_col, gain_method, missing_string='?', max_dep
         temp_label = data[0][label_col]
         if all(row[label_col] == temp_label for row in data):
             if not attribute:
-                # node = get_most_common_label(data, label)
-                # graph.add_node(f"{label}_{node}")
                 common_node = tree.Node(get_most_common_label(data, label_col))
                 return common_node
             else:
-                # graph.add_node(f"{label}_{temp_label}")
                 node = tree.Node(temp_label)
                 return node
         else:
@@ -95,27 +95,30 @@ def id3(dataset, attributes, label_col, gain_method, missing_string='?', max_dep
                     largest_gain = gain
                     best = (atr[0], atr[1])
 
-            # graph.add_node(best)
             root = tree.Node(best[1])
             for value in get_attribute_values(data, best[0]):
-                # graph.add_node(f"{best}_{value}")
-                # graph.add_edge(best, f"{best}_{value}")
                 child = tree.Node(value)
                 root.add_child(child)
                 sv = [row for row in data if row[best[0]] == value]
                 if not sv:
-                    # graph.add_node(f"{best}_{get_most_common_label(sv, label)}")
                     child.add_child(tree.Node(get_most_common_label(sv, label_col)))
                 else:
-                    # graph.add_edge(run_id3(sv, attribute.difference((best,))), best)
                     if depth <= max_depth:
                         depth += 1
                         child.add_child(run_id3(sv, attribute.difference((best,))))
                     else:
                         child.add_child(tree.Node(get_most_common_label(sv, label_col)))
-            depth -= 1
+            # depth -= 1
             return root
 
+    # convert numerics to booleans
+    for atri in attributes:
+        atr_col = atri[0]
+        values = [row[atr_col] for row in dataset]
+        if type(values[0]) == int:
+            bool_values = []
+            for idx, val in enumerate(values):
+                dataset[idx][atr_col] = (convert_numeric_to_bool(values, val))
     return run_id3(dataset, attributes)
 
 
@@ -149,6 +152,14 @@ def get_most_common_attribute_value_with_label(dataset, attribute_col, label_col
     return count[0]
 
 
+def convert_numeric_to_bool(attribute, value):
+    median = statistics.median(attribute)
+    if value > median:
+        return True
+    else:
+        return False
+
+
 def get_information_gain(input_set, attribute_col, label_col, missing_string):
     attribute = get_attribute_values(input_set, attribute_col)
     entropy_sum = 0
@@ -157,7 +168,6 @@ def get_information_gain(input_set, attribute_col, label_col, missing_string):
             # value = get_most_common_attribute_value(input_set, attribute_col)
             value = get_most_common_attribute_value_with_label(input_set, attribute_col, label_col)
         subset = [row[label_col] for row in input_set if row[attribute_col] == value]
-        # print('subset: ', subset)
         entropy_sum += (len(subset) / len(input_set)) * get_entropy(subset)
 
     return get_entropy([row[label_col] for row in input_set]) - entropy_sum
@@ -172,7 +182,6 @@ def get_fractional_gain(input_set, attribute_col, label_col, missing_string):
             entropy_sum += get_fractional_entropy(input_set, value, attribute_col, label_col)
         else:
             subset = [row[label_col] for row in input_set if row[attribute_col] == value]
-            # print('subset: ', subset)
             entropy_sum += (len(subset) / len(input_set)) * get_entropy(subset)
 
     return get_entropy([row[label_col] for row in input_set]) - entropy_sum
@@ -253,10 +262,11 @@ def run_tree_on_dataset(input_tree, test_dataset, label_col, atr_names):
     for tup in result:
         if tup[0] == tup[1]:
             accurate_count += 1
-    print('number of correct guesses: ', accurate_count)
-    print('number of incorrect guesses: ', len(result) - accurate_count)
-    print('accuracy of tree: ', accurate_count / len(result))
-    print(f'\n')
+    # print('number of correct guesses: ', accurate_count)
+    # print('number of incorrect guesses: ', len(result) - accurate_count)
+    # print('Accuracy of tree:')
+    print(accurate_count / len(result))
+    # print(f'\n')
     return result
 
 
@@ -336,7 +346,6 @@ print('results of standard tree no depth limit on test data')
 run_tree_on_dataset(car_tree_basic_no_limit, dataset_car_test, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
 
-
 print('results of standard tree depth limit 1 on training data:')
 run_tree_on_dataset(car_tree_basic_depth_1, dataset_car, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
@@ -358,7 +367,6 @@ print('results of standard tree depth limit 3 on test data')
 run_tree_on_dataset(car_tree_basic_depth_3, dataset_car_test, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
 
-
 print('results of standard tree depth limit 4 on training data:')
 run_tree_on_dataset(car_tree_basic_depth_4, dataset_car, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
@@ -373,7 +381,6 @@ print('results of standard tree depth limit 5 on test data')
 run_tree_on_dataset(car_tree_basic_depth_5, dataset_car_test, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
 
-
 print('results of standard tree depth limit 6 on training data:')
 run_tree_on_dataset(car_tree_basic_depth_6, dataset_car, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
@@ -383,19 +390,19 @@ run_tree_on_dataset(car_tree_basic_depth_6, dataset_car_test, 6,
 
 # same as above but with Me gain
 car_tree_me_no_limit = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                            (5, 'safety')}, 6, get_me_gain)
+                                         (5, 'safety')}, 6, get_me_gain)
 car_tree_me_depth_1 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_me_gain, max_depth=1)
+                                        (5, 'safety')}, 6, get_me_gain, max_depth=1)
 car_tree_me_depth_2 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_me_gain, max_depth=2)
+                                        (5, 'safety')}, 6, get_me_gain, max_depth=2)
 car_tree_me_depth_3 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_me_gain, max_depth=3)
+                                        (5, 'safety')}, 6, get_me_gain, max_depth=3)
 car_tree_me_depth_4 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_me_gain, max_depth=4)
+                                        (5, 'safety')}, 6, get_me_gain, max_depth=4)
 car_tree_me_depth_5 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_me_gain, max_depth=5)
+                                        (5, 'safety')}, 6, get_me_gain, max_depth=5)
 car_tree_me_depth_6 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_me_gain, max_depth=6)
+                                        (5, 'safety')}, 6, get_me_gain, max_depth=6)
 
 print('result of id3 on the car dataset: \n', car_tree_me_no_limit)
 nx.draw(car_tree_me_no_limit.to_graph(), with_labels=True, arrows=True)
@@ -407,7 +414,6 @@ run_tree_on_dataset(car_tree_me_no_limit, dataset_car, 6,
 print('results of me tree no depth limit on test data')
 run_tree_on_dataset(car_tree_me_no_limit, dataset_car_test, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
-
 
 print('results of me tree depth limit 1 on training data:')
 run_tree_on_dataset(car_tree_me_depth_1, dataset_car, 6,
@@ -430,7 +436,6 @@ print('results of me tree depth limit 3 on test data')
 run_tree_on_dataset(car_tree_me_depth_3, dataset_car_test, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
 
-
 print('results of me tree depth limit 4 on training data:')
 run_tree_on_dataset(car_tree_me_depth_4, dataset_car, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
@@ -445,7 +450,6 @@ print('results of me tree depth limit 5 on test data')
 run_tree_on_dataset(car_tree_me_depth_5, dataset_car_test, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
 
-
 print('results of me tree depth limit 6 on training data:')
 run_tree_on_dataset(car_tree_me_depth_6, dataset_car, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
@@ -455,19 +459,19 @@ run_tree_on_dataset(car_tree_me_depth_6, dataset_car_test, 6,
 
 # same as above but with GINI instead
 car_tree_gini_no_limit = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                            (5, 'safety')}, 6, get_gini_gain)
+                                           (5, 'safety')}, 6, get_gini_gain)
 car_tree_gini_depth_1 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_gini_gain, max_depth=1)
+                                          (5, 'safety')}, 6, get_gini_gain, max_depth=1)
 car_tree_gini_depth_2 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_gini_gain, max_depth=2)
+                                          (5, 'safety')}, 6, get_gini_gain, max_depth=2)
 car_tree_gini_depth_3 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_gini_gain, max_depth=3)
+                                          (5, 'safety')}, 6, get_gini_gain, max_depth=3)
 car_tree_gini_depth_4 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_gini_gain, max_depth=4)
+                                          (5, 'safety')}, 6, get_gini_gain, max_depth=4)
 car_tree_gini_depth_5 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_gini_gain, max_depth=5)
+                                          (5, 'safety')}, 6, get_gini_gain, max_depth=5)
 car_tree_gini_depth_6 = id3(dataset_car, {(0, 'buying'), (1, 'maint'), (2, 'doors'), (3, 'persons'), (4, 'lug_boot'),
-                                           (5, 'safety')}, 6, get_gini_gain, max_depth=6)
+                                          (5, 'safety')}, 6, get_gini_gain, max_depth=6)
 
 print('result of id3 on the car dataset: \n', car_tree_gini_no_limit)
 nx.draw(car_tree_gini_no_limit.to_graph(), with_labels=True, arrows=True)
@@ -479,7 +483,6 @@ run_tree_on_dataset(car_tree_gini_no_limit, dataset_car, 6,
 print('results of gini tree no depth limit on test data')
 run_tree_on_dataset(car_tree_gini_no_limit, dataset_car_test, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
-
 
 print('results of gini tree depth limit 1 on training data:')
 run_tree_on_dataset(car_tree_gini_depth_1, dataset_car, 6,
@@ -502,7 +505,6 @@ print('results of gini tree depth limit 3 on test data')
 run_tree_on_dataset(car_tree_gini_depth_3, dataset_car_test, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
 
-
 print('results of gini tree depth limit 4 on training data:')
 run_tree_on_dataset(car_tree_gini_depth_4, dataset_car, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
@@ -517,10 +519,86 @@ print('results of gini tree depth limit 5 on test data')
 run_tree_on_dataset(car_tree_gini_depth_5, dataset_car_test, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
 
-
 print('results of gini tree depth limit 6 on training data:')
 run_tree_on_dataset(car_tree_gini_depth_6, dataset_car, 6,
                     ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
 print('results of gini tree depth limit 6 on test data')
-run_tree_on_dataset(car_tree_gini_depth_6, dataset_car_test, 6,
-                    ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety'])
+run_tree_on_dataset(car_tree_gini_depth_6, dataset_car_test, 6, )
+
+# Bank Section
+bank_atr_set = {(0, 'age'), (1, 'job'), (2, 'married'), (3, 'education'), (4, 'default'),
+                (5, 'balance'),
+                (6, 'housing'), (7, 'loan'), (8, 'contact'), (9, 'day'), (10, 'month'),
+                (11, 'duration'),
+                (12, 'campaign'), (13, 'pdays'), (14, 'previous'), (15, 'poutcome')}
+bank_atrs = ['age', 'job', 'married', 'education', 'default', 'balance', 'housing', 'loan', 'contact', 'day', 'month',
+             'duration', 'campaign', 'pdays', 'previous', 'poutcome']
+
+# run bank stuff for default
+i = 1
+while i < 17:
+    bank_tree = id3(dataset_bank, bank_atr_set, 16, get_information_gain, max_depth=i)
+    print(f'results of gain bank tree depth limit {i} on training data:')
+    run_tree_on_dataset(bank_tree, dataset_bank, 16, bank_atrs)
+    print(f'results of gain bank tree depth limit {i} on test data')
+    run_tree_on_dataset(bank_tree, dataset_bank_test, 16, bank_atrs)
+    i += 1
+# run bank stuff for ME
+i = 1
+while i < 17:
+    bank_tree = id3(dataset_bank, bank_atr_set, 16, get_me_gain, max_depth=i)
+    print(f'results of me bank tree depth limit {i} on training data:')
+    run_tree_on_dataset(bank_tree, dataset_bank, 16, bank_atrs)
+    print(f'results of me bank tree depth limit {i} on test data')
+    run_tree_on_dataset(bank_tree, dataset_bank_test, 16, bank_atrs)
+    i += 1
+# run bank stuff for GINI
+i = 1
+while i < 17:
+    bank_tree = id3(dataset_bank, bank_atr_set, 16, get_gini_gain, max_depth=i)
+    print(f'results of gini bank tree depth limit {i} on training data:')
+    run_tree_on_dataset(bank_tree, dataset_bank, 16, bank_atrs)
+    print(f'results of gini bank tree depth limit {i} on test data')
+    run_tree_on_dataset(bank_tree, dataset_bank_test, 16, bank_atrs)
+    i += 1
+
+# run bank stuff for missing value
+i = 1
+while i < 17:
+    bank_tree = id3(dataset_bank, bank_atr_set, 16, get_information_gain, max_depth=i, missing_string='unknown')
+    print('results of gini tree depth limit 6 on training data:')
+    run_tree_on_dataset(bank_tree, dataset_bank, 16, bank_atrs)
+    print('results of gini tree depth limit 6 on test data')
+    run_tree_on_dataset(bank_tree, dataset_bank_test, 16, bank_atrs)
+    i += 1
+# run bank stuff for ME
+i = 1
+while i < 17:
+    bank_tree = id3(dataset_bank, bank_atr_set, 16, get_me_gain, max_depth=i, missing_string='unknown')
+    print('results of gini tree depth limit 6 on training data:')
+    run_tree_on_dataset(bank_tree, dataset_bank, 16, bank_atrs)
+    print('results of gini tree depth limit 6 on test data')
+    run_tree_on_dataset(bank_tree, dataset_bank_test, 16, bank_atrs)
+    i += 1
+# run bank stuff for GINI
+i = 1
+while i < 17:
+    bank_tree = id3(dataset_bank, bank_atr_set, 16, get_gini_gain, max_depth=i, missing_string='unknown')
+    print('results of gini tree depth limit 6 on training data:')
+    run_tree_on_dataset(bank_tree, dataset_bank, 16, bank_atrs)
+    print('results of gini tree depth limit 6 on test data')
+    run_tree_on_dataset(bank_tree, dataset_bank_test, 16, bank_atrs)
+    i += 1
+
+# run bank stuff for default
+i = 1
+while i < 17:
+    bank_tree = id3(dataset_bank, bank_atr_set, 16, get_gini_gain, max_depth=i, missing_string='unknown')
+    run_tree_on_dataset(bank_tree, dataset_bank, 16, bank_atrs)
+    i += 1
+
+i = 1
+while i < 17:
+    bank_tree = id3(dataset_bank, bank_atr_set, 16, get_gini_gain, max_depth=i, missing_string='unknown')
+    run_tree_on_dataset(bank_tree, dataset_bank_test, 16, bank_atrs)
+    i += 1

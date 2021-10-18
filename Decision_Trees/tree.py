@@ -1,6 +1,7 @@
 # basic implementation of a tree structure in python
 import networkx as nx
 
+
 class Node:
     """a node which contains a name and a list of references to its children"""
 
@@ -57,4 +58,3 @@ class Node:
                 if child.name in atr_names or child.name == p:
                     # print('traversing into:', child.name)
                     return self.traverse_with_inputs(child, path, atr_names)
-

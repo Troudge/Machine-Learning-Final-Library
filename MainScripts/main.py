@@ -3,7 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from collections import Counter
 import math
-import tree
+from Decision_Trees import tree
 import statistics
 
 # Press Shift+F10 to execute it or replace it with your code.
@@ -48,25 +48,25 @@ dataset3 = [['S', 'H', 'H', 'W', 0],
             ['?', 'M', 'N', 'W', 1]]
 
 dataset_car = []
-with open('Data/car/train.csv', 'r') as file:
+with open('../Data/car/train.csv', 'r') as file:
     for line in file:
         terms = line.strip().split(',')
         dataset_car.append(terms)
 
 dataset_car_test = []
-with open('Data/car/test.csv', 'r') as file:
+with open('../Data/car/test.csv', 'r') as file:
     for line in file:
         terms = line.strip().split(',')
         dataset_car_test.append(terms)
 
 dataset_bank = []
-with open('Data/bank/train.csv', 'r') as file:
+with open('../Data/bank/train.csv', 'r') as file:
     for line in file:
         terms = line.strip().split(',')
         dataset_bank.append(terms)
 
 dataset_bank_test = []
-with open('Data/bank/test.csv', 'r') as file:
+with open('../Data/bank/test.csv', 'r') as file:
     for line in file:
         terms = line.strip().split(',')
         dataset_bank_test.append(terms)

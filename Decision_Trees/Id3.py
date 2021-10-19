@@ -35,12 +35,12 @@ def get_most_common_attribute_value_with_label(dataset, attribute_col, label_col
     return count[0]
 
 
-def convert_numeric_to_bool(attribute, value):
-    median = statistics.median(attribute)
+def convert_numeric_to_bool(values, value):
+    median = statistics.median(values)
     if value > median:
-        return True
+        return 'True'
     else:
-        return False
+        return 'False'
 
 
 def get_information_gain(input_set, attribute_col, label_col, missing_string):
@@ -218,42 +218,38 @@ class Id3Tree:
 
     def generate_id3_tree_stump(self):
         def run_id3(data, attribute):
+            #for row in data:
+                #print(row)
             temp_label = data[0][self.label_col]
-            if all(row[self.label_col] == temp_label for row in data):
-                if not attribute:
-                    common_node = Node(get_most_common_label(data, self.label_col))
-                    return common_node
-                else:
-                    node = Node(temp_label)
-                    return node
-            else:
-                largest_gain = None
-                best = ()
-                for atr in attribute:
-                    gain = get_gini_gain(data, atr[0], self.label_col, self.missing_string)
-                    if not largest_gain or gain > largest_gain:
-                        largest_gain = gain
-                        best = (atr[0], atr[1])
+            largest_gain = None
+            best = ()
+            for atr in attribute:
+                gain = get_gini_gain(data, atr[0], self.label_col, self.missing_string)
+                if not largest_gain or gain > largest_gain:
+                    largest_gain = gain
+                    best = (atr[0], atr[1])
 
-                root = Node(best[1])
-                for value in get_attribute_values(data, best[0]):
-                    child = Node(value)
-                    root.add_child(child)
-                    sv = [row for row in data if row[best[0]] == value]
-                    if not sv:
-                        child.add_child(Node(get_most_common_label(sv, self.label_col)))
-                    else:
-                        child.add_child(Node(get_most_common_label(sv, self.label_col)))
-                return root
+            root = Node(best[1])
+            for value in get_attribute_values(data, best[0]):
+                child = Node(value)
+                root.add_child(child)
+                sv = [row for row in data if row[best[0]] == value]
+                if not sv:
+                    child.add_child(Node(get_most_common_label(sv, self.label_col)))
+                else:
+                    child.add_child(Node(get_most_common_label(sv, self.label_col)))
+            return root
 
         # convert numerics to booleans
         for atri in self.attributes:
             atr_col = atri[0]
             values = [row[atr_col] for row in self.dataset]
-            if type(values[0]) == int:
-                bool_values = []
-                for idx, val in enumerate(values):
-                    self.dataset[idx][atr_col] = (convert_numeric_to_bool(values, val))
+            if type(values[0]) != bool:
+                if values[0].isnumeric() or (values[0].startswith("-") and values[0][1:].isdigit()):
+                    int_values = list(map(int, values))
+                    bool_values = []
+                    for idx, val in enumerate(int_values):
+                        self.dataset[idx][atr_col] = (convert_numeric_to_bool(int_values, val))
         self.tree = run_id3(self.dataset, self.attributes)
         return self.tree
 

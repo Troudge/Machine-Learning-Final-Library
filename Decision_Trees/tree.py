@@ -45,16 +45,24 @@ class Node:
         add_to_graph(self)
         return graph
 
-    def traverse_with_inputs(self, root, path, atr_names):
-        if not path:
-            if root.children:
-                return root.children[0].name
-            else:
-                return f'no output found. path ended at: {root.name}'
-        for p in path:
-            for child in root.children:
-                if not child.has_children():
-                    return child.name
-                if child.name in atr_names or child.name == p:
-                    # print('traversing into:', child.name)
-                    return self.traverse_with_inputs(child, path, atr_names)
+    def traverse_with_inputs(self, root, path, attributes):
+        #print(root.name)
+        #print(list(attributes))
+        for attribute in attributes:
+            #print(attribute)
+            #print(attribute, attribute[1] == root.name)
+            if root.name == attribute[1]:
+                if root.has_children:
+                    for child in root.children:
+                        #print(path[attribute[0]])
+                        if child.name == path[attribute[0]]:
+                            new_attributes = list(attributes)
+                            new_attributes.remove(attribute)
+                            if child.has_children:
+                                #print("traversing into:", child.children[0])
+                                return self.traverse_with_inputs(child.children[0], path, new_attributes)
+                else:
+                    #print("root has no children. Returning: ", root.name)
+                    return root.name
+        #print("found no matching attribute name. Returning:", root.name)
+        return root.name

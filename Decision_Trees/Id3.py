@@ -137,6 +137,19 @@ def calculate_gini(input_set):
     return 1 - value_sum
 
 
+def convert_numeric_set_to_boolean(dataset, attributes):
+    new_set = dataset.copy()
+    for atri in attributes:
+        atr_col = atri[0]
+        values = [row[atr_col] for row in new_set]
+        if type(values[0]) != bool:
+            if values[0].isnumeric() or (values[0].startswith("-") and values[0][1:].isdigit()):
+                int_values = list(map(int, values))
+                for idx, val in enumerate(int_values):
+                    new_set[idx][atr_col] = (convert_numeric_to_bool(int_values, val))
+    return new_set
+
+
 class Id3Tree:
     tree = None
     dataset = []
@@ -144,11 +157,11 @@ class Id3Tree:
     label_col = 0
     gain_method = ''
     missing_string = '?'
-    max_depth = 30
+    max_depth =900
 
     def __init__(self, dataset, attributes, label_col, gain_method, missing_string='?', max_depth=30):
         self.tree = None
-        self.dataset = dataset
+        self.dataset = dataset.copy()
         self.attributes = attributes
         self.label_col = label_col
         if gain_method == 'information_gain':
@@ -209,10 +222,11 @@ class Id3Tree:
         for atri in self.attributes:
             atr_col = atri[0]
             values = [row[atr_col] for row in self.dataset]
-            if type(values[0]) == int:
-                bool_values = []
-                for idx, val in enumerate(values):
-                    self.dataset[idx][atr_col] = (convert_numeric_to_bool(values, val))
+            if type(values[0]) != bool:
+                if values[0].isnumeric() or (values[0].startswith("-") and values[0][1:].isdigit()):
+                    int_values = list(map(int, values))
+                    for idx, val in enumerate(int_values):
+                        self.dataset[idx][atr_col] = (convert_numeric_to_bool(int_values, val))
         self.tree = run_id3(self.dataset, self.attributes)
         return self.tree
 
@@ -247,10 +261,10 @@ class Id3Tree:
             if type(values[0]) != bool:
                 if values[0].isnumeric() or (values[0].startswith("-") and values[0][1:].isdigit()):
                     int_values = list(map(int, values))
-                    bool_values = []
                     for idx, val in enumerate(int_values):
                         self.dataset[idx][atr_col] = (convert_numeric_to_bool(int_values, val))
         self.tree = run_id3(self.dataset, self.attributes)
+        # print(self.tree)
         return self.tree
 
     def run_tree_on_dataset(self, test_dataset, atr_names):

@@ -52,7 +52,7 @@ class EnsembleLearner:
     attribute_names = []
 
     def __init__(self, dataset, attributes, label_col):
-        self.dataset = dataset
+        self.dataset = dataset.copy()
         self.attributes = attributes
         self.label_col = label_col
         self.attribute_names = (row[1] for row in attributes)
@@ -75,6 +75,8 @@ class EnsembleLearner:
 
             # calculate the error and rows that failed and passed
             error, results = get_error_of_tree(stump, weighted_dataset, self.label_col, self.attributes)
+            if error == 0:
+                error = 0.0000001
             print(error)
             vote = 0.5 * math.log((1 - error) / error)
             learned_forest.append((stump, vote))
@@ -84,10 +86,10 @@ class EnsembleLearner:
                 # update with a positive value if results are correct
                 if results[idx][0] == results[idx][1]:
                     #print(row[-1], math.exp(vote))
-                    row[-1] = row[-1] * math.exp(-vote)
+                    row[-1] = row[-1] * math.exp(vote)
                     weight_sum += row[-1]
                 else:
-                    row[-1] = row[-1] * math.exp(vote)
+                    row[-1] = row[-1] * math.exp(-vote)
                     weight_sum += row[-1]
             # divide the new weights by their sum to normalize them
             for row in weighted_dataset:
@@ -98,9 +100,33 @@ class EnsembleLearner:
                 num = random.random()
                 for k in range(len(weighted_dataset)):
                     if num <= weighted_dataset[k][self.label_col + 1]:
-                        new_data.append(weighted_dataset[k][:-1])
+                        new_data.append(weighted_dataset[k][:-1].copy())
                         break
                     num -= weighted_dataset[k][self.label_col + 1]
             weighted_dataset = new_data
         print(f"finished {T} iterations. returning")
         return learned_forest
+
+    def bagged_trees(self, T, num_samples):
+        bagged_forest = []
+        for i in range(T):
+            new_set = []
+            for j in range(num_samples):
+                new_set.append(random.choice(self.dataset).copy())
+            learner = Id3.Id3Tree(new_set, self.attributes, self.label_col, "information_gain")
+            id3_tree = learner.generate_id3_tree()
+            bagged_forest.append((id3_tree, 0))
+        return bagged_forest
+
+    def random_forest(self, T, feature_subset_size, num_samples):
+        random_forest = []
+        for i in range(T):
+            bootstrap_set = []
+            for j in range(num_samples):
+                bootstrap_set.append(random.choice(self.dataset).copy())
+            atr_subset = random.sample(self.attributes, feature_subset_size)
+            learner = Id3.Id3Tree(bootstrap_set, atr_subset, self.label_col, "information_gain")
+            id3_tree = learner.generate_id3_tree()
+            random_forest.append((id3_tree, 1))
+        pass
+

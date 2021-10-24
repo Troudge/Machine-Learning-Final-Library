@@ -194,12 +194,14 @@ class Id3Tree:
             else:
                 largest_gain = None
                 best = ()
+                if len(attribute) == 0:
+                    common_node = Node(get_most_common_label(data, self.label_col))
+                    return common_node
                 for atr in attribute:
                     gain = self.gain_method(data, atr[0], self.label_col, self.missing_string)
                     if not largest_gain or gain > largest_gain:
                         largest_gain = gain
                         best = (atr[0], atr[1])
-
                 root = Node(best[1])
                 for value in get_attribute_values(data, best[0]):
                     child = Node(value)
@@ -232,13 +234,11 @@ class Id3Tree:
 
     def generate_id3_tree_stump(self):
         def run_id3(data, attribute):
-            #for row in data:
-                #print(row)
             temp_label = data[0][self.label_col]
             largest_gain = None
             best = ()
             for atr in attribute:
-                gain = get_gini_gain(data, atr[0], self.label_col, self.missing_string)
+                gain = get_information_gain(data, atr[0], self.label_col, self.missing_string)
                 if not largest_gain or gain > largest_gain:
                     largest_gain = gain
                     best = (atr[0], atr[1])

@@ -6,6 +6,12 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from Ensemble_Learning import EnsembleLearners
 
+test_small_data = [[1, -1, 2, 1],
+                   [1,  1, 3, 4],
+                   [-1, 1, 0, -1],
+                   [1, 2, -4, -2],
+                   [3, -1, -1, 0]]
+
 dataset2 = [['S', 'H', 'H', 'W', 0],
             ['S', 'H', 'H', 'S', 0],
             ['O', 'H', 'H', 'W', 1],
@@ -47,29 +53,31 @@ with open('../Data/concrete/test.csv', 'r') as file:
 
 atr = {(0, 'Outlook'), (1, 'Temp'), (2, 'Humidity'), (3, 'Wind')}
 atr2 = {(0, 'age'), (1, 'job'), (2, 'married'), (3, 'education'), (4, 'default'),
-                (5, 'balance'),
-                (6, 'housing'), (7, 'loan'), (8, 'contact'), (9, 'day'), (10, 'month'),
-                (11, 'duration'),
-                (12, 'campaign'), (13, 'pdays'), (14, 'previous'), (15, 'poutcome')}
+        (5, 'balance'),
+        (6, 'housing'), (7, 'loan'), (8, 'contact'), (9, 'day'), (10, 'month'),
+        (11, 'duration'),
+        (12, 'campaign'), (13, 'pdays'), (14, 'previous'), (15, 'poutcome')}
 atr3 = {(0, 'Cement'), (1, 'Slag'), (2, 'Fly ash'), (3, 'Water'), (4, 'SP'), (5, 'Course Aggr.'), (6, 'Fine Aggr.')}
 # tests of the adaboost algorithm
-# learner = EnsembleLearners.EnsembleLearner(dataset2, atr, 4)
-# forest = learner.adaboost(1)
-# print(EnsembleLearners.run_learned_forest(forest, ['R', 'C', 'N', 'W', 1], atr))
-
+#for i in range(1, 100):
+#    learner = EnsembleLearners.EnsembleLearner(dataset_bank, atr2, 16)
+#    forest = learner.adaboost(i)
+#    print(EnsembleLearners.run_forest_on_set(forest, Id3.convert_numeric_set_to_boolean(dataset_bank, atr2), atr2, 16))
 
 
 # bank_forest = bank_learner.adaboost(500)
-#print(EnsembleLearners.run_forest_on_set(bank_forest, dataset_bank, atr2, 16))
+# print(EnsembleLearners.run_forest_on_set(bank_forest, dataset_bank, atr2, 16))
 
-#for i in range(1, 100):
+# for i in range(1, 100):
 #    bank_learner = EnsembleLearners.EnsembleLearner(dataset_bank, atr2, 16)
 #    bank_forest_bagged = bank_learner.bagged_trees(i, 2500)
 #    print(EnsembleLearners.run_forest_on_set(bank_forest_bagged, Id3.convert_numeric_set_to_boolean(dataset_bank, atr2), atr2, 16))
 
-bank_learner = EnsembleLearners.EnsembleLearner(dataset_bank, atr2, 16)
-bank_random = bank_learner.random_forest(1, 2, 2500)
-print(EnsembleLearners.run_forest_on_set(bank_random, Id3.convert_numeric_set_to_boolean(dataset_bank, atr2), atr2, 16))
+#for i in range(1, 100):
+#    bank_learner = EnsembleLearners.EnsembleLearner(dataset_bank, atr2, 16)
+#    bank_random = bank_learner.random_forest(i, 6, 2500)
+#    print(EnsembleLearners.run_forest_on_set(bank_random, Id3.convert_numeric_set_to_boolean(dataset_bank_test, atr2), atr2,
+#                                             16))
 
 # An example of a decision tree stump
 # decision_tree = Id3Tree(dataset2, atr, 4, 'information_gain')
@@ -86,4 +94,7 @@ print(EnsembleLearners.run_forest_on_set(bank_random, Id3.convert_numeric_set_to
 # min_weights = concrete_learner.stochastic_gradient_descent(0.0125, 200, 0.000001)
 # print(RegressionLearners.run_weight_vec_cost_function(min_weights, dataset_concrete_test, 7))
 # print("min Weights: ", min_weights)
-
+atr4 = {(0, 'x_1'), (1, 'x_2'), (2, 'x_3')}
+l = RegressionLearners.RegressionLearners(test_small_data, atr4)
+min_weights = l.batch_gradient_descent(0.1, 5, 0.000001)
+print("min Weights: ", min_weights)

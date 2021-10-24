@@ -42,7 +42,7 @@ def run_forest_on_set(input_forest, dataset, attributes, label_col):
         output = run_learned_forest(input_forest, row, attributes)
         if output == row[label_col]:
             correct_count += 1
-    return correct_count/len(dataset)
+    return (len(dataset)-correct_count)/len(dataset)
 
 
 class EnsembleLearner:
@@ -77,7 +77,7 @@ class EnsembleLearner:
             error, results = get_error_of_tree(stump, weighted_dataset, self.label_col, self.attributes)
             if error == 0:
                 error = 0.0000001
-            print(error)
+            # print(error)
             vote = 0.5 * math.log((1 - error) / error)
             learned_forest.append((stump, vote))
             weight_sum = 0
@@ -104,7 +104,7 @@ class EnsembleLearner:
                         break
                     num -= weighted_dataset[k][self.label_col + 1]
             weighted_dataset = new_data
-        print(f"finished {T} iterations. returning")
+        # print(f"finished {T} iterations. returning")
         return learned_forest
 
     def bagged_trees(self, T, num_samples):
@@ -124,9 +124,10 @@ class EnsembleLearner:
             bootstrap_set = []
             for j in range(num_samples):
                 bootstrap_set.append(random.choice(self.dataset).copy())
-            atr_subset = random.sample(self.attributes, feature_subset_size)
+            atr_subset = set(random.sample(self.attributes, feature_subset_size))
             learner = Id3.Id3Tree(bootstrap_set, atr_subset, self.label_col, "information_gain")
             id3_tree = learner.generate_id3_tree()
+            # print(id3_tree)
             random_forest.append((id3_tree, 1))
-        pass
+        return random_forest
 

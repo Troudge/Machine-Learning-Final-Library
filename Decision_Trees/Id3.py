@@ -138,16 +138,16 @@ def calculate_gini(input_set):
 
 
 def convert_numeric_set_to_boolean(dataset, attributes):
-    new_set = dataset.copy()
+    # new_set = dataset.copy()
     for atri in attributes:
         atr_col = atri[0]
-        values = [row[atr_col] for row in new_set]
+        values = [row[atr_col] for row in dataset]
         if type(values[0]) != bool:
             if values[0].isnumeric() or (values[0].startswith("-") and values[0][1:].isdigit()):
                 int_values = list(map(int, values))
                 for idx, val in enumerate(int_values):
-                    new_set[idx][atr_col] = (convert_numeric_to_bool(int_values, val))
-    return new_set
+                    dataset[idx][atr_col] = (convert_numeric_to_bool(int_values, val))
+    return dataset
 
 
 class Id3Tree:
@@ -281,6 +281,6 @@ class Id3Tree:
         # print('number of correct guesses: ', accurate_count)
         # print('number of incorrect guesses: ', len(result) - accurate_count)
         # print('Accuracy of tree:')
-        print(accurate_count / len(result))
+        # print(accurate_count / len(result))
         # print(f'\n')
         return result

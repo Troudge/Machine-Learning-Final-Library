@@ -1,5 +1,6 @@
 import math
 import random
+import csv
 
 from Decision_Trees import Id3
 from Decision_Trees import tree
@@ -19,20 +20,25 @@ def get_error_of_tree(input_tree, test_set, label_col, attribute_names):
             # error_weight_sum += row[label_col + 1]
             # print("error", error_weight_sum)
         result.append(tup)
-    return error/len(test_set), result
+    return error / len(test_set), result
 
 
 def run_learned_forest(input_forest, row, attributes):
     result = {}
     for t in input_forest:
+        #print('tree is:', t[0])
         for a in attributes:
+            #print('tree[0]: ', t[0].name)
+            #print('a[0]: ', a[1])
             if t[0].name == a[1]:
-                key = t[0].traverse_with_inputs(t[0], row, [a])
+                key = t[0].traverse_with_inputs(t[0], row, attributes)
+                #print('key is:', key)
                 if key not in result:
                     result[key] = t[1]
                 else:
                     result[key] += t[1]
                 break
+    print(result)
     return max(result, key=lambda x: result[x])
 
 
@@ -42,7 +48,24 @@ def run_forest_on_set(input_forest, dataset, attributes, label_col):
         output = run_learned_forest(input_forest, row, attributes)
         if output == row[label_col]:
             correct_count += 1
-    return (len(dataset)-correct_count)/len(dataset)
+    return (len(dataset) - correct_count) / len(dataset)
+
+
+# this method does not expect the dataset to have a label_column
+def print_forest_outputs(input_forest, dataset, attributes):
+    numeric_set = Id3.convert_numeric_set_to_boolean(dataset, attributes)
+    #print('got past converting set')
+    with open('../Data/outputs.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        header = ['ID', 'Prediction']
+        writer.writerow(header)
+        data = []
+        for i in range(len(numeric_set)):
+            #print('running learned forest on row')
+            output = run_learned_forest(input_forest, numeric_set[i][1:], attributes)
+            #print('output: ', output)
+            data.append([i+1, output])
+        writer.writerows(data)
 
 
 class EnsembleLearner:
@@ -65,13 +88,13 @@ class EnsembleLearner:
         for i in range(T):
             for row in weighted_dataset:
                 row.append(starting_weight)
-            #print(*weighted_dataset, sep="\n")
+            # print(*weighted_dataset, sep="\n")
             # generate a decision stump using the weighted dataset
             id3 = Id3.Id3Tree(weighted_dataset, self.attributes, self.label_col, 'information_gain')
             stump = id3.generate_id3_tree_stump()
-            #nx.draw(stump.to_graph(),
+            # nx.draw(stump.to_graph(),
             #        with_labels=True, arrows=True)
-            #plt.show()
+            # plt.show()
 
             # calculate the error and rows that failed and passed
             error, results = get_error_of_tree(stump, weighted_dataset, self.label_col, self.attributes)
@@ -85,7 +108,7 @@ class EnsembleLearner:
             for idx, row in enumerate(weighted_dataset):
                 # update with a positive value if results are correct
                 if results[idx][0] == results[idx][1]:
-                    #print(row[-1], math.exp(vote))
+                    # print(row[-1], math.exp(vote))
                     row[-1] = row[-1] * math.exp(vote)
                     weight_sum += row[-1]
                 else:
@@ -124,10 +147,9 @@ class EnsembleLearner:
             bootstrap_set = []
             for j in range(num_samples):
                 bootstrap_set.append(random.choice(self.dataset).copy())
-            atr_subset = set(random.sample(self.attributes, feature_subset_size))
+            atr_subset = set(random.sample(self.attributes, feature_subset_size).copy())
             learner = Id3.Id3Tree(bootstrap_set, atr_subset, self.label_col, "information_gain")
             id3_tree = learner.generate_id3_tree()
-            # print(id3_tree)
+            print(id3_tree)
             random_forest.append((id3_tree, 1))
         return random_forest
-

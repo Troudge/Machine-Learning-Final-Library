@@ -47,20 +47,21 @@ class Node:
 
     def traverse_with_inputs(self, root, path, attributes):
         #print(root.name)
+        #print(path)
         #print(list(attributes))
         for attribute in attributes:
-            #print(attribute)
-            #print(attribute, attribute[1] == root.name)
+            #print('attribute: ', attribute)
+            #print('attribute = root?: ', attribute[1] == root.name)
             if root.name == attribute[1]:
                 if root.has_children:
                     for child in root.children:
                         #print(path[attribute[0]])
                         if child.name == path[attribute[0]]:
-                            new_attributes = list(attributes)
-                            new_attributes.remove(attribute)
+                            #new_attributes = list(attributes)
+                            #new_attributes.remove(attribute)
                             if child.has_children:
                                 #print("traversing into:", child.children[0])
-                                return self.traverse_with_inputs(child.children[0], path, new_attributes)
+                                return self.traverse_with_inputs(child.children[0], path, attributes)
                 else:
                     #print("root has no children. Returning: ", root.name)
                     return root.name

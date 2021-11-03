@@ -74,7 +74,7 @@ class PerceptronLearner:
                     for idx, value in enumerate(row[:-1]):
                         weights[idx] = weights[idx] + learning_rate * ((float(row[-1]) - result) * float(value))
                     weights[-1] = weights[-1] + learning_rate * ((float(row[-1]) - result) * 1)
-                    voted_weights.append((weights, correct))
+                    voted_weights.append((weights.copy(), correct))
                     correct = 0
         return voted_weights
 

@@ -18,13 +18,28 @@ with open('../Data/bank-note/test.csv', 'r') as file:
 learner = SVMLearner.SVMLearner(dataset_banknote)
 final_weights = learner.primal_svm(100, 0.01, 0.05, 100 / 873)
 # training error
+print('train and test for C = 100/873')
+print(SVMLearner.run_learned_weights(final_weights, dataset_banknote))
+# test error
+print(SVMLearner.run_learned_weights(final_weights, dataset_banknote_test))
+
+final_weights = learner.primal_svm(100, 0.01, 0.05, 500 / 873)
+# training error
+print('train and test for C = 500/873')
+print(SVMLearner.run_learned_weights(final_weights, dataset_banknote))
+# test error
+print(SVMLearner.run_learned_weights(final_weights, dataset_banknote_test))
+
+final_weights = learner.primal_svm(100, 0.01, 0.05, 700 / 873)
+# training error
+print('train and test for C = 700/873')
 print(SVMLearner.run_learned_weights(final_weights, dataset_banknote))
 # test error
 print(SVMLearner.run_learned_weights(final_weights, dataset_banknote_test))
 
 
 def basic_kernel(x: np.array, xt: np.array):
-    return np.matmul(x, xt)
+    return np.dot(x, xt)
 
 
-learner.dual_svm(0.01, 100/873, basic_kernel)
+learner.dual_svm(100/873, basic_kernel)

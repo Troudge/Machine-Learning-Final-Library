@@ -1,3 +1,4 @@
+import csv
 import kaggle
 import sklearn
 import numpy as np
@@ -13,7 +14,6 @@ def test_model(dataset, network, labels):
     for idx, row in enumerate(dataset):
         int_row = np.array(list(float(r) for r in row))
         result = network(torch.tensor(int_row, dtype=torch.float)).item()
-        print(result)
         r = 0
         if result < 0:
             r = 1
@@ -22,6 +22,20 @@ def test_model(dataset, network, labels):
         if r == float(labels[idx]):
             accuracy += 1
     print('Error', 1 - accuracy / len(dataset))
+
+
+def generate_predictions(network, test_inputs, ids):
+    outputs = []
+    for idx, row in enumerate(test_inputs):
+        int_row = np.array(list(float(r) for r in row))
+        result = network(torch.tensor(int_row, dtype=torch.float)).item()
+        r = 0
+        if result < 0:
+            r = 1
+        else:
+            r = 0
+        outputs.append(r)
+    return outputs
 
 
 class KaggleNetwork(nn.Module):
@@ -35,9 +49,9 @@ class KaggleNetwork(nn.Module):
         self.num_hidden = num_hidden
 
     def forward(self, inp) -> torch.Tensor:
-        x = self.relu(self.layer1(inp))
+        x = self.tanh(self.layer1(inp))
         for i in range(self.num_hidden):
-            x = self.relu(self.layer2(x))
+            x = self.tanh(self.layer2(x))
         x = self.layer3(x)
         return x
 
@@ -83,19 +97,17 @@ for row in dataset_income_test:
 
 test_data = np.array(dataset_income_test)[:, 1:]
 test_Ids = np.array(dataset_income_test)[:, 1]
-t_rearranged = test_data[:, [0, 1, 3, 5, 9, 11, 12, 13, 2, 4, 6, 7, 8, 9, 10]]
+t_rearranged = test_data[:, [0, 2, 4, 10, 11, 12, 1, 3, 5, 6, 7, 8, 9, 13]]
 d = t_rearranged[:, 6:]
 test_inputs = t_rearranged[:, :6]
 for i in range(8):
     enc.fit(d[:, i])
     out = np.array(enc.transform(d[:, i])).reshape(-1, 1)
     test_inputs = np.append(test_inputs, out, axis=1)
-
-
-model = KaggleNetwork(14, 5)
+model = KaggleNetwork(14, 15)
 model.apply(initialize_weights_normal)
 
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.0001)
 for idx, row in enumerate(train_inputs):
     int_row = np.array(list(float(r) for r in row))
     expected = np.array([float(train_labels[idx])])
@@ -108,4 +120,13 @@ for idx, row in enumerate(train_inputs):
 
 # test model accuracy
 test_model(train_inputs, model, train_labels)
-# test_model(test_inputs, model, test_labels)
+outputs_to_csv = generate_predictions(model, test_inputs, test_Ids)
+
+with open('../Data/outputs.csv', 'w') as csvfile:
+    writer = csv.writer(csvfile)
+    header = ['ID', 'Prediction']
+    writer.writerow(header)
+    data = []
+    for i in range(len(outputs_to_csv)):
+        data.append([i + 1, outputs_to_csv[i]])
+    writer.writerows(data)
